@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customs Allowance Calculator (Persistent)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom modal styles for overlay */
+        .modal-overlay {
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        .modal-box {
+            z-index: 1010;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8 flex items-center justify-center min-h-screen">
+
+    <div id="confirmationModal" class="modal-overlay fixed inset-0 hidden items-center justify-center">
+        <div class="modal-box bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-sm">
+            <h3 class="text-xl font-bold text-red-600 mb-4">Confirm Data Clearance</h3>
+            <p class="text-gray-700 mb-6">Are you absolutely sure you want to clear **ALL** saved duty-free data? This action is permanent and cannot be undone.</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="hideClearConfirmation()" class="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                    Cancel
+                </button>
+                <button onclick="clearAllData()" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">
+                    Yes, Clear Data
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="w-full max-w-sm bg-white rounded-xl shadow-xl p-6 sm:p-8 space-y-6 border border-gray-200">
+        <div class="text-center space-y-2">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Customs Allowance</h1>
+            <p class="text-gray-500">Track your allowance for two people.</p>
+            <div id="status" class="text-xs font-semibold text-green-600">Loading...</div>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">Still Wine</h2>
+            <div class="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Volume (Liters)</p>
+                    <div id="stillWineVolume" class="text-2xl font-bold text-green-600">0.00</div>
+                </div>
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Bottles</p>
+                    <div id="stillWineBottles" class="text-2xl font-bold text-green-600">0</div>
+                </div>
+            </div>
+            <p class="text-sm text-center text-gray-500">Allowance Remaining (Bottles): <span id="stillWineRemainingBottles" class="font-bold">48.0</span></p>
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="addWine(1)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 1</button>
+                <button onclick="addWine(6)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 6</button>
+                <button onclick="addWine(12)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 12</button>
+                <button onclick="removeWine(1)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 1</button>
+                <button onclick="removeWine(6)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 6</button>
+                <button onclick="removeWine(12)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 12</button>
+            </div>
+            <p class="text-sm text-center text-gray-500">Max Allowance: 36L (48 bottles)</p>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">Spirits</h2>
+            <div class="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Volume (Liters)</p>
+                    <div id="spiritsVolume" class="text-2xl font-bold text-green-600">0.00</div>
+                </div>
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Bottles</p>
+                    <div id="spiritsBottles" class="text-2xl font-bold text-green-600">0</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="addSpirits(1)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 1</button>
+                <button onclick="addSpirits(6)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 6</button>
+                <button onclick="addSpirits(12)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 12</button>
+                <button onclick="removeSpirits(1)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 1</button>
+                <button onclick="removeSpirits(6)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 6</button>
+                <button onclick="removeSpirits(12)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 12</button>
+            </div>
+            <p class="text-sm text-center text-gray-500">Max Allowance: 8L</p>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">Other Drinks</h2>
+            <div class="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Volume (Liters)</p>
+                    <div id="otherDrinksVolume" class="text-2xl font-bold text-green-600">0.00</div>
+                </div>
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Bottles</p>
+                    <div id="otherDrinksBottles" class="text-2xl font-bold text-green-600">0</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="addOtherDrinks(1)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 1</button>
+                <button onclick="addOtherDrinks(6)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 6</button>
+                <button onclick="addOtherDrinks(12)" class="bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">Add 12</button>
+                <button onclick="removeOtherDrinks(1)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 1</button>
+                <button onclick="removeOtherDrinks(6)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 6</button>
+                <button onclick="removeOtherDrinks(12)" class="bg-red-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200">Remove 12</button>
+            </div>
+            <p class="text-sm text-center text-gray-500">Max Allowance: 18L</p>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">Combined Spirits & Other Drinks</h2>
+            <div class="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Allowance Used</p>
+                    <div id="combinedUsed" class="text-2xl font-bold text-gray-900">0.0%</div>
+                </div>
+                <div class="flex-grow space-y-1">
+                    <p class="text-sm text-gray-500">Status</p>
+                    <div id="combinedStatus" class="text-2xl font-bold text-green-600">OK</div>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="showClearConfirmation()" class="w-full bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200">
+            Clear All Saved Data
+        </button>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const statusEl = document.getElementById('status');
+        const stillWineVolumeEl = document.getElementById('stillWineVolume');
+        const stillWineBottlesEl = document.getElementById('stillWineBottles');
+        const stillWineRemainingBottlesEl = document.getElementById('stillWineRemainingBottles');
+        const spiritsVolumeEl = document.getElementById('spiritsVolume');
+        const spiritsBottlesEl = document.getElementById('spiritsBottles');
+        const otherDrinksVolumeEl = document.getElementById('otherDrinksVolume');
+        const otherDrinksBottlesEl = document.getElementById('otherDrinksBottles');
+        const combinedUsedEl = document.getElementById('combinedUsed');
+        const combinedStatusEl = document.getElementById('combinedStatus');
+        const modalEl = document.getElementById('confirmationModal'); // The custom modal
+
+        // Initial Data Structure
+        let data = {
+            stillWine: { volume: 0, bottles: 0 },
+            spirits: { volume: 0, bottles: 0 },
+            otherDrinks: { volume: 0, bottles: 0 }
+        };
+
+        // Constants
+        const STILL_WINE_ML = 750;
+        const SPIRITS_ML = 700;
+        const OTHER_DRINKS_ML = 750;
+        const WINE_ALLOWANCE_L = 36;
+        const WINE_ALLOWANCE_BOTTLES = WINE_ALLOWANCE_L / (STILL_WINE_ML / 1000); // 36L / 0.75L = 48 bottles
+        const SPIRITS_ALLOWANCE_L = 8;
+        const OTHER_DRINKS_ALLOWANCE_L = 18;
+
+        // --- Core Logic Functions ---
+
+        /**
+         * Updates the UI elements based on the current state of the 'data' object.
+         */
+        function updateDisplay() {
+            stillWineVolumeEl.textContent = data.stillWine.volume.toFixed(2);
+            stillWineBottlesEl.textContent = data.stillWine.bottles;
+            stillWineRemainingBottlesEl.textContent = Math.max(0, WINE_ALLOWANCE_BOTTLES - data.stillWine.bottles).toFixed(1);
+
+            spiritsVolumeEl.textContent = data.spirits.volume.toFixed(2);
+            spiritsBottlesEl.textContent = data.spirits.bottles;
+
+            otherDrinksVolumeEl.textContent = data.otherDrinks.volume.toFixed(2);
+            otherDrinksBottlesEl.textContent = data.otherDrinks.bottles;
+
+            // Update combined allowance
+            const spiritsUsedFraction = data.spirits.volume / SPIRITS_ALLOWANCE_L;
+            const otherDrinksUsedFraction = data.otherDrinks.volume / OTHER_DRINKS_ALLOWANCE_L;
+            // The combined calculation is: (Spirits Liters / Max Spirits L) + (Other Drinks Liters / Max Other Drinks L). 
+            // This assumes 100% is used when the sum of fractions reaches 1.0 (or 100).
+            const combinedUsedFraction = spiritsUsedFraction + otherDrinksUsedFraction;
+            const combinedUsedPercentage = combinedUsedFraction * 100;
+            
+            combinedUsedEl.textContent = `${combinedUsedPercentage.toFixed(1)}%`;
+            if (combinedUsedFraction > 1.0) { // Check if the fraction is over 100%
+                combinedStatusEl.textContent = "OVER";
+                combinedStatusEl.classList.remove('text-green-600', 'text-gray-900', 'text-orange-500');
+                combinedStatusEl.classList.add('text-red-600');
+            } else if (combinedUsedFraction > 0.8) {
+                combinedStatusEl.textContent = "HIGH";
+                combinedStatusEl.classList.remove('text-green-600', 'text-red-600');
+                combinedStatusEl.classList.add('text-orange-500');
+            } else {
+                combinedStatusEl.textContent = "OK";
+                combinedStatusEl.classList.remove('text-red-600', 'text-orange-500');
+                combinedStatusEl.classList.add('text-green-600');
+            }
+        }
+
+        // --- Storage Functions (Now using localStorage for persistence) ---
+
+        /**
+         * Saves the current application data to localStorage.
+         */
+        function saveToLocalStorage() {
+            localStorage.setItem('customsData', JSON.stringify(data));
+            statusEl.textContent = "Data Saved";
+            console.log('Data saved to localStorage.');
+        }
+
+        /**
+         * Loads data from localStorage on initialization, with safer error handling.
+         */
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('customsData');
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    
+                    // Safely merge loaded data with defaults (0) using optional chaining
+                    // This handles cases where data might be missing or corrupted
+                    data.stillWine.volume = parsedData.stillWine?.volume || 0;
+                    data.stillWine.bottles = parsedData.stillWine?.bottles || 0;
+                    data.spirits.volume = parsedData.spirits?.volume || 0;
+                    data.spirits.bottles = parsedData.spirits?.bottles || 0;
+                    data.otherDrinks.volume = parsedData.otherDrinks?.volume || 0;
+                    data.otherDrinks.bottles = parsedData.otherDrinks?.bottles || 0;
+
+                    statusEl.textContent = "Data Loaded";
+                    console.log('Data loaded successfully.');
+                } catch (e) {
+                    console.error("Error parsing saved data, starting fresh:", e);
+                    statusEl.textContent = "Load Error (Starting Fresh)";
+                }
+            } else {
+                statusEl.textContent = "Ready (Fresh Session)";
+                console.log('No saved data found. Starting fresh.');
+            }
+            updateDisplay();
+        }
+        
+        // --- Modal/Clear Functions ---
+        
+        /**
+         * Shows the custom confirmation modal.
+         */
+        window.showClearConfirmation = () => {
+            modalEl.classList.remove('hidden');
+            modalEl.classList.add('flex');
+        };
+
+        /**
+         * Hides the custom confirmation modal.
+         */
+        window.hideClearConfirmation = () => {
+            modalEl.classList.remove('flex');
+            modalEl.classList.add('hidden');
+        };
+
+        /**
+         * Clears all data, removes it from localStorage, and resets the UI.
+         */
+        window.clearAllData = () => {
+            // 1. Reset the local data object to initial state
+            data.stillWine = { volume: 0, bottles: 0 };
+            data.spirits = { volume: 0, bottles: 0 };
+            data.otherDrinks = { volume: 0, bottles: 0 };
+            
+            // 2. Remove the item completely from localStorage
+            localStorage.removeItem('customsData');
+            
+            // 3. Update the display and hide modal
+            updateDisplay();
+            hideClearConfirmation();
+            statusEl.textContent = "Data Cleared Permanently";
+            
+            console.log("All saved data explicitly cleared.");
+        };
+
+
+        // --- Item Modification Functions (These all call saveToLocalStorage) ---
+        
+        window.addWine = (bottles) => {
+            data.stillWine.volume += (bottles * STILL_WINE_ML) / 1000;
+            data.stillWine.bottles += bottles;
+            updateDisplay();
+            saveToLocalStorage();
+        };
+
+        window.removeWine = (bottles) => {
+            data.stillWine.volume = Math.max(0, data.stillWine.volume - (bottles * STILL_WINE_ML) / 1000);
+            data.stillWine.bottles = Math.max(0, data.stillWine.bottles - bottles);
+            updateDisplay();
+            saveToLocalStorage();
+        };
+
+        window.addSpirits = (bottles) => {
+            data.spirits.volume += (bottles * SPIRITS_ML) / 1000;
+            data.spirits.bottles += bottles;
+            updateDisplay();
+            saveToLocalStorage();
+        };
+
+        window.removeSpirits = (bottles) => {
+            data.spirits.volume = Math.max(0, data.spirits.volume - (bottles * SPIRITS_ML) / 1000);
+            data.spirits.bottles = Math.max(0, data.spirits.bottles - bottles);
+            updateDisplay();
+            saveToLocalStorage();
+        };
+
+        window.addOtherDrinks = (bottles) => {
+            data.otherDrinks.volume += (bottles * OTHER_DRINKS_ML) / 1000;
+            data.otherDrinks.bottles += bottles;
+            updateDisplay();
+            saveToLocalStorage();
+        };
+
+        window.removeOtherDrinks = (bottles) => {
+            data.otherDrinks.volume = Math.max(0, data.otherDrinks.volume - (bottles * OTHER_DRINKS_ML) / 1000);
+            data.otherDrinks.bottles = Math.max(0, data.otherDrinks.bottles - bottles);
+            updateDisplay();
+            saveToLocalStorage();
+        };
+        
+        // Initialize the app on load
+        window.onload = function() {
+            loadFromLocalStorage();
+        };
+    </script>
+</body>
+</html>
